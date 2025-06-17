@@ -79,7 +79,7 @@ docker-compose down
 Dica: Para remover também o volume de dados do PostgreSQL (apagando todas as tarefas salvas), use o comando docker-compose down -v.
 
 ## 📄 Licença
-Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## 🤖 Desenvolvimento Assistido por IA
 Parte do código, da estrutura e da documentação deste projeto foi gerada com o auxílio do Gemini, um modelo de linguagem grande do Google. A ferramenta foi utilizada para acelerar o desenvolvimento, gerar código boilerplate, depurar erros e refinar a documentação, servindo como uma assistente de programação.
