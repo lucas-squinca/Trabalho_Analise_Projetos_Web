@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Tarefas</title>
+    <!-- Link para a folha de estilos externa -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>📝 Lista de Tarefas</h1>
+
+        <form id="form-tarefa">
+            <input type="text" id="input-tarefa" placeholder="O que precisa ser feito?" required autocomplete="off">
+            <button type="submit">Adicionar</button>
+        </form>
+
+        <ul id="lista-tarefas">
+            <!-- As tarefas serão inseridas aqui pelo JavaScript -->
+        </ul>
+    </div>
+
+    <!-- Elemento para notificações -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // A URL da nossa API que está rodando no container do backend.
+        const apiUrl = 'http://localhost:5000/tarefas';
+
+        const form = document.getElementById('form-tarefa');
+        const input = document.getElementById('input-tarefa');
+        const lista = document.getElementById('lista-tarefas');
+        const notification = document.getElementById('notification');
+        
+        // Função para mostrar notificações na tela
+        const showNotification = (message) => {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000); // A notificação desaparecerá após 3 segundos
+        };
+
+        // Função para renderizar as tarefas na tela
+        const renderizarTarefas = (tarefas) => {
+            lista.innerHTML = ''; // Limpa a lista atual
+            if (tarefas.length === 0) {
+                lista.innerHTML = '<p class="status-message">Nenhuma tarefa cadastrada.</p>';
+                return;
+            }
+            tarefas.forEach(tarefa => {
+                const item = document.createElement('li');
+                item.classList.toggle('concluida', tarefa.concluida);
+                
+                const descricaoSpan = document.createElement('span');
+                descricaoSpan.className = 'descricao';
+                descricaoSpan.textContent = tarefa.descricao;
+                descricaoSpan.onclick = () => alternarStatus(tarefa.id, !tarefa.concluida);
+
+                item.appendChild(descricaoSpan);
+                lista.appendChild(item);
+            });
+        };
+
+        // Função para carregar tarefas da API
+        const carregarTarefas = async () => {
+            try {
+                lista.innerHTML = '<p class="status-message">Carregando...</p>';
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`Falha ao buscar tarefas: ${response.statusText}`);
+                }
+                const tarefas = await response.json();
+                renderizarTarefas(tarefas);
+            } catch (error) {
+                console.error('Erro ao carregar tarefas:', error);
+                lista.innerHTML = '<p class="status-message">Erro ao carregar tarefas. Verifique a conexão com a API.</p>';
+            }
+        };
+
+        // Função para adicionar uma nova tarefa
+        const adicionarTarefa = async (event) => {
+            event.preventDefault();
+            const descricao = input.value.trim();
+            if (!descricao) return;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ descricao })
+                });
+                if (!response.ok) {
+                    throw new Error('Falha ao adicionar tarefa');
+                }
+                input.value = '';
+                await carregarTarefas(); // Recarrega a lista
+            } catch (error) {
+                console.error('Erro ao adicionar tarefa:', error);
+                showNotification('Não foi possível adicionar a tarefa.');
+            }
+        };
+
+        // Função para alternar o status (concluída/pendente)
+        const alternarStatus = async (id, novoStatus) => {
+            try {
+                const response = await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ concluida: novoStatus })
+                });
+                if (!response.ok) {
+                    throw new Error('Falha ao atualizar tarefa');
+                }
+                await carregarTarefas(); // Recarrega a lista
+            } catch (error) {
+                console.error('Erro ao atualizar tarefa:', error);
+                showNotification('Não foi possível atualizar a tarefa.');
+            }
+        };
+
+        // Adiciona os event listeners
+        form.addEventListener('submit', adicionarTarefa);
+        
+        // Carrega as tarefas quando a página é carregada.
+        // Adicionando um pequeno atraso para dar tempo ao backend de inicializar completamente.
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(carregarTarefas, 500); // Atraso de 500ms
+        });
+    </script>
+
+</body>
+</html>

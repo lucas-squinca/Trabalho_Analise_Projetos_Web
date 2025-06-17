@@ -1,0 +1,74 @@
+# Define a versão do Docker Compose. A versão 3.8 é moderna e estável.
+version: '3.8'
+
+# Define os serviços (containers) que compõem a aplicação.
+services:
+
+  # Serviço do Backend (API em Flask)
+  backend:
+    # 'build: ./backend' instrui o Compose a construir a imagem Docker
+    # a partir do Dockerfile localizado na pasta ./backend.
+    build: ./backend
+    # Mapeia a porta 5000 do host para a porta 5000 do container.
+    # Assim, podemos acessar a API via http://localhost:5000.
+    ports:
+      - "5000:5000"
+    # Monta a pasta local `./backend` no diretório `/app` do container.
+    # Isso permite o "hot-reloading": alterações no código local são
+    # refletidas instantaneamente no container, sem precisar reconstruir a imagem.
+    volumes:
+      - ./backend:/app
+    # Define as variáveis de ambiente que a aplicação Flask usará para
+    # se conectar ao banco de dados.
+    environment:
+      - DB_HOST=postgres-db # O nome do serviço do banco de dados
+      - POSTGRES_DB=tarefas_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    # 'depends_on' garante que o container 'postgres-db' seja iniciado
+    # antes do container 'backend'. Isso evita que a API tente se conectar
+    # a um banco de dados que ainda não está pronto.
+    depends_on:
+      - postgres-db
+
+  # Serviço do Banco de Dados (PostgreSQL)
+  postgres-db:
+    # Usa a imagem oficial do PostgreSQL da versão 14, na variante Alpine (menor).
+    image: postgres:14-alpine
+    # Define as variáveis de ambiente para configurar o PostgreSQL.
+    # O banco de dados e o usuário serão criados na primeira inicialização.
+    environment:
+      - POSTGRES_DB=tarefas_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    # 'volumes' é usado para persistir os dados do banco de dados.
+    # 'postgres_data' é um volume nomeado gerenciado pelo Docker.
+    # Se o container for removido, os dados não serão perdidos.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Opcional: Mapeia a porta 5432 para que você possa conectar ao banco
+    # de dados usando uma ferramenta de DB (como DBeaver ou pgAdmin) do seu computador.
+    ports:
+      - "5432:5432"
+
+  # Serviço do Frontend (Servidor Web Nginx)
+  frontend:
+    # Usa a imagem oficial e leve do Nginx para servir arquivos estáticos.
+    image: nginx:stable-alpine
+    # Mapeia a porta 8080 do host para a porta 80 do container (porta padrão do Nginx).
+    # A aplicação frontend estará acessível em http://localhost:8080.
+    ports:
+      - "8080:80"
+    # Monta a pasta local `./frontend` no diretório padrão do Nginx.
+    # O Nginx servirá o arquivo `index.html` que está dentro desta pasta.
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    # Garante que o frontend só inicie depois do backend estar pronto.
+    depends_on:
+      - backend
+
+# Define os volumes nomeados que serão usados pelos serviços.
+# Volumes gerenciados pelo Docker são a maneira recomendada de persistir dados.
+volumes:
+  postgres_data:
+
