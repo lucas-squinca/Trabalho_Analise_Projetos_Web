@@ -10,9 +10,6 @@ app = Flask(__name__)
 CORS(app)
 
 def get_db_connection():
-    """Estabelece conexão com o banco de dados PostgreSQL."""
-    # O loop de retentativa é crucial em ambientes de container,
-    # pois o backend pode iniciar antes do banco de dados estar pronto.
     retries = 5
     while retries > 0:
         try:
@@ -28,7 +25,7 @@ def get_db_connection():
             retries -= 1
             print(f"Não foi possível conectar ao banco. Tentando novamente em 5 segundos... ({retries} tentativas restantes)")
             time.sleep(5)
-    # Se todas as tentativas falharem, lança uma exceção.
+
     raise Exception("Não foi possível conectar ao banco de dados após várias tentativas.")
 
 def init_db():
@@ -107,7 +104,5 @@ def update_tarefa(id):
     return jsonify({'sucesso': True, 'mensagem': f'Tarefa {id} atualizada.'})
 
 if __name__ == '__main__':
-    # Garante que a tabela exista antes de iniciar a aplicação
     init_db()
-    # Inicia o servidor Flask
     app.run(host='0.0.0.0', port=5000)

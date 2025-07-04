@@ -121,13 +121,11 @@
             }
         };
 
-        // Adiciona os event listeners
+
         form.addEventListener('submit', adicionarTarefa);
         
-        // Carrega as tarefas quando a página é carregada.
-        // Adicionando um pequeno atraso para dar tempo ao backend de inicializar completamente.
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(carregarTarefas, 500); // Atraso de 500ms
+            setTimeout(carregarTarefas, 500);
         });
     </script>
 
